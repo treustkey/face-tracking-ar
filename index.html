@@ -4,38 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AR Face Tracking - Очки</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-        }
-        #container {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-        }
-        #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 20px;
-            z-index: 100;
-        }
-        #instructions {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            z-index: 100;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="container">
@@ -52,10 +21,10 @@
             // Инициализация MindAR Face Tracking
             const mindarFace = new MindARFace({
                 container: document.getElementById("container"),
-                imageTargetSrc: null, // Для face tracking не нужен target
-                filterMinCF: 0.001, // Коэффициент сглаживания для стабильности
-                filterBeta: 10, // Параметр сглаживания
-                maxTrack: 1 // Максимум одно лицо
+                imageTargetSrc: null,
+                filterMinCF: 0.001,
+                filterBeta: 10,
+                maxTrack: 1
             });
 
             // Three.js сцена
@@ -134,7 +103,7 @@
             // Масштабирование очков
             glassesGroup.scale.set(1.5, 1.5, 1.5);
 
-            // Привязка к лицу (landmark index 0 - центр лица)
+            // Привязка к лицу
             const anchorIndex = 0;
             const anchor = mindarFace.addAnchor(anchorIndex);
             anchor.group.add(glassesGroup);
