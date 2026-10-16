@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Face Tracking - Очки</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 20px;
+            z-index: 100;
+        }
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="loading">Загрузка AR-маски...</div>
+        <div id="instructions">Наведите камеру на лицо</div>
+    </div>
+
+    <!-- MindAR библиотеки -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-face-image.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
+
+    <script>
+        const init = async () => {
+            // Инициализация MindAR Face Tracking
+            const mindarFace = new MindARFace({
+                container: document.getElementById("container"),
+                imageTargetSrc: null, // Для face tracking не нужен target
+                filterMinCF: 0.001, // Коэффициент сглаживания для стабильности
+                filterBeta: 10, // Параметр сглаживания
+                maxTrack: 1 // Максимум одно лицо
+            });
+
+            // Three.js сцена
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(
+                75,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            const renderer = new THREE.WebGLRenderer({
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById("container").appendChild(renderer.domElement);
+
+            // Освещение
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(0, 1, 1);
+            scene.add(directionalLight);
+
+            // Создание 3D-очков программно
+            const glassesGroup = new THREE.Group();
+
+            // Левая линза
+            const lensGeometry = new THREE.TorusGeometry(0.15, 0.02, 16, 32);
+            const lensMaterial = new THREE.MeshStandardMaterial({
+                color: 0x000000,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            const leftLens = new THREE.Mesh(lensGeometry, lensMaterial);
+            leftLens.position.set(-0.2, 0, 0);
+            leftLens.rotation.y = Math.PI / 2;
+            glassesGroup.add(leftLens);
+
+            // Правая линза
+            const rightLens = new THREE.Mesh(lensGeometry, lensMaterial);
+            rightLens.position.set(0.2, 0, 0);
+            rightLens.rotation.y = Math.PI / 2;
+            glassesGroup.add(rightLens);
+
+            // Мост между линзами
+            const bridgeGeometry = new THREE.CylinderGeometry(0.01, 0.01, 0.1, 8);
+            const bridgeMaterial = new THREE.MeshStandardMaterial({
+                color: 0x333333,
+                metalness: 0.9,
+                roughness: 0.1
+            });
+            const bridge = new THREE.Mesh(bridgeGeometry, bridgeMaterial);
+            bridge.rotation.z = Math.PI / 2;
+            bridge.position.set(0, 0, 0);
+            glassesGroup.add(bridge);
+
+            // Дужки
+            const armGeometry = new THREE.CylinderGeometry(0.01, 0.01, 0.3, 8);
+            const armMaterial = new THREE.MeshStandardMaterial({
+                color: 0x333333,
+                metalness: 0.9,
+                roughness: 0.1
+            });
+            
+            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+            leftArm.rotation.x = Math.PI / 2;
+            leftArm.position.set(-0.35, 0, -0.15);
+            glassesGroup.add(leftArm);
+
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.rotation.x = Math.PI / 2;
+            rightArm.position.set(0.35, 0, -0.15);
+            glassesGroup.add(rightArm);
+
+            // Масштабирование очков
+            glassesGroup.scale.set(1.5, 1.5, 1.5);
+
+            // Привязка к лицу (landmark index 0 - центр лица)
+            const anchorIndex = 0;
+            const anchor = mindarFace.addAnchor(anchorIndex);
+            anchor.group.add(glassesGroup);
+
+            // Позиционирование очков на лице
+            glassesGroup.position.set(0, 0.05, 0.1);
+            glassesGroup.rotation.set(0, 0, 0);
+
+            // Скрытие loading
+            document.getElementById("loading").style.display = "none";
+
+            // Запуск AR
+            const { start, stop } = await mindarFace.start();
+            await start();
+
+            // Анимационный цикл
+            renderer.setAnimationLoop(() => {
+                renderer.render(scene, camera);
+            });
+
+            // Обработка изменения размера окна
+            window.addEventListener("resize", () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        };
+
+        init();
+    </script>
+</body>
+</html>
