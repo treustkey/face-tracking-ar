@@ -1,145 +1,179 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Face Tracking - Очки</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>MindAR Face — Шляпа</title>
+
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-face.prod.js"></script>
+
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
+    #overlay {
+      position: fixed; inset: 0; display: flex;
+      align-items: center; justify-content: center;
+      color: #fff; font-family: sans-serif; text-align: center;
+      background: rgba(0,0,0,0.7); z-index: 10;
+    }
+    #overlay.hidden { display: none; }
+  </style>
 </head>
 <body>
-    <div id="container">
-        <div id="debug" style="position:fixed; top:0; left:0; background:rgba(255,255,0,0.9); 
-     z-index:9999; padding:10px; font-size:12px; max-width:300px;"></div>
-        <div id="loading">Загрузка AR-маски...</div>
-        <div id="instructions">Наведите камеру на лицо</div>
-    </div>
 
-    <!-- MindAR библиотеки -->
-<script src="https://unpkg.com/mind-ar@1.2.5/dist/mindar-face.prod.js"></script>
-<script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
-    <script>
-    // Диагностика загрузки скриптов
-    window.addEventListener('error', function(e) {
-        if (e.target.tagName === 'SCRIPT') {
-            alert('❌ Не загрузился скрипт: ' + e.target.src);
-            console.error('Script load error:', e.target.src);
-        }
-    }, true);
-    
-    window.addEventListener('load', function() {
-        console.log('MindARFace:', typeof MindARFace);
-        console.log('THREE:', typeof THREE);
-        
-        if (typeof MindARFace === 'undefined') {
-            document.body.innerHTML = '<div style="color:red; padding:20px; font-size:18px;">' +
-                '❌ MindAR не загружен!<br>' +
-                'Проверьте:<br>' +
-                '1. Интернет-соединение<br>' +
-                '2. Блокировщик рекламы<br>' +
-                '3. Откройте консоль (F12) для деталей</div>';
-        }
-    });
+<div id="overlay">
+  <div>
+    <h2>Наведите камеру на лицо</h2>
+    <p>Разрешите доступ к камере</p>
+  </div>
+</div>
+
+<a-scene
+  mindar-face
+  color-space="srgb"
+  renderer="antialias: true; colorManagement: true; physicallyCorrectLights: false"
+  device-orientation-permission-ui="enabled: false">
+
+  <a-camera active="false" position="0 0 0" look-controls="enabled: false"></a-camera>
+
+  <!--
+    MindAR Face anchors (MediaPipe FaceMesh):
+      0 — нос (центр лица)
+      8 — лоб (между бровями)
+      ...
+  -->
+
+  <!-- ============ ШЛЯПА-ЦИЛИНДР: привязана ко лбу (anchor 8) ============ -->
+  <a-entity mindar-face-target="anchorIndex: 8">
+    <a-entity
+      id="hat"
+      position="0 0.02 0"
+      rotation="-8 0 0"
+      scale="0.11 0.11 0.11"
+      hat-sway>
+
+      <!-- Поля шляпы (широкий плоский диск) -->
+      <a-cylinder position="0 0 0" radius="1.1" height="0.06"
+                  color="#1a1a1a" segments-radial="48"
+                  metalness="0.2" roughness="0.7"></a-cylinder>
+
+      <!-- Тулья (высокий цилиндр) -->
+      <a-cylinder position="0 0.55 0" radius="0.55" height="0.9"
+                  color="#111111" segments-radial="36"
+                  metalness="0.3" roughness="0.6"></a-cylinder>
+
+      <!-- Верхняя крышка тульи -->
+      <a-cylinder position="0 1.0 0" radius="0.55" height="0.04"
+                  color="#0a0a0a" segments-radial="36"></a-cylinder>
+
+      <!-- Лента вокруг тульи -->
+      <a-cylinder position="0 0.2 0" radius="0.57" height="0.18"
+                  color="#8B0000" segments-radial="36"
+                  metalness="0.1" roughness="0.8"></a-cylinder>
+
+      <!-- Пряжка на ленте -->
+      <a-box position="0 0.2 0.57" width="0.18" height="0.18" depth="0.04"
+             color="#FFD700" metalness="0.9" roughness="0.2"></a-box>
+      <a-box position="0 0.2 0.58" width="0.10" height="0.10" depth="0.04"
+             color="#111111"></a-box>
+
+      <!-- Декоративный цветок сбоку (из 5 лепестков-сфер) -->
+      <a-entity position="-0.55 0.35 0.15" rotation="0 0 20">
+        <a-sphere position="0      0      0"    radius="0.08" color="#ff3366"></a-sphere>
+        <a-sphere position="0.12   0      0"    radius="0.08" color="#ff3366"></a-sphere>
+        <a-sphere position="-0.12  0      0"    radius="0.08" color="#ff3366"></a-sphere>
+        <a-sphere position="0      0.12   0"    radius="0.08" color="#ff3366"></a-sphere>
+        <a-sphere position="0     -0.12   0"    radius="0.08" color="#ff3366"></a-sphere>
+        <a-sphere position="0      0      0"    radius="0.06" color="#FFD700"></a-sphere>
+      </a-entity>
+
+      <!-- Маленькое перышко, торчащее из-за цветка -->
+      <a-cone position="-0.7 0.7 0.1" rotation="0 0 25"
+              radius-bottom="0.04" radius-top="0" height="0.5"
+              color="#33ccff" segments-radial="12"></a-cone>
+    </a-entity>
+  </a-entity>
+
+  <!-- ============ АНИМИРОВАННАЯ РАМКА: привязана к носу (anchor 0) ============ -->
+  <a-entity mindar-face-target="anchorIndex: 0">
+    <a-entity
+      id="frame"
+      position="0 0 0"
+      scale="0.18 0.22 0.18"
+      frame-animation>
+
+      <a-box position="0  0.5 0" width="1.05" height="0.05" depth="0.05"
+             color="#FFD700" metalness="0.7" roughness="0.25"></a-box>
+      <a-box position="0 -0.5 0" width="1.05" height="0.05" depth="0.05"
+             color="#FFD700" metalness="0.7" roughness="0.25"></a-box>
+      <a-box position="-0.5 0 0" width="0.05" height="1.05" depth="0.05"
+             color="#FFD700" metalness="0.7" roughness="0.25"></a-box>
+      <a-box position=" 0.5 0 0" width="0.05" height="1.05" depth="0.05"
+             color="#FFD700" metalness="0.7" roughness="0.25"></a-box>
+
+      <!-- Угловые «камни» -->
+      <a-sphere position="-0.5  0.5 0" radius="0.07" color="#ff3366"></a-sphere>
+      <a-sphere position=" 0.5  0.5 0" radius="0.07" color="#33ccff"></a-sphere>
+      <a-sphere position="-0.5 -0.5 0" radius="0.07" color="#33ccff"></a-sphere>
+      <a-sphere position=" 0.5 -0.5 0" radius="0.07" color="#ff3366"></a-sphere>
+    </a-entity>
+  </a-entity>
+
+</a-scene>
+
+<script>
+/* ---------- Сглаживание позиции/поворота (low-pass filter) ---------- */
+AFRAME.registerComponent('smooth-look', {
+  schema: { factor: { type: 'number', default: 0.4 } },
+  init() {
+    this._tP = new THREE.Vector3();
+    this._cP = new THREE.Vector3();
+    this._tQ = new THREE.Quaternion();
+    this._cQ = new THREE.Quaternion();
+  },
+  tick() {
+    const o = this.el.object3D;
+    const k = this.data.factor;
+    this._tP.copy(o.position);
+    this._cP.lerp(this._tP, k);
+    o.position.copy(this._cP);
+    o.getWorldQuaternion(this._tQ);
+    this._cQ.slerp(this._tQ, k);
+    o.quaternion.copy(this._cQ);
+  }
+});
+
+/* ---------- Лёгкое покачивание шляпы (как будто на голове) ---------- */
+AFRAME.registerComponent('hat-sway', {
+  tick(t) {
+    const r = this.el.object3D.rotation;
+    r.z = Math.sin(t * 0.0012) * 0.04;   // крен
+    r.x = -0.14 + Math.sin(t * 0.0018) * 0.02; // лёгкий наклон вперёд-назад
+  }
+});
+
+/* ---------- Пульсация и покачивание рамки ---------- */
+AFRAME.registerComponent('frame-animation', {
+  tick(t) {
+    const s = 1 + Math.sin(t * 0.003) * 0.03;
+    this.el.object3D.scale.set(0.18 * s, 0.22 * s, 0.18 * s);
+    this.el.object3D.rotation.z = Math.sin(t * 0.0015) * 0.05;
+  }
+});
+
+/* ---------- Применяем сглаживание ко всем target-ам ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[mindar-face-target]').forEach(el => {
+    el.setAttribute('smooth-look', 'factor: 0.4');
+  });
+});
+
+/* ---------- Скрываем оверлей после готовности AR ---------- */
+const sceneEl = document.querySelector('a-scene');
+sceneEl.addEventListener('arReady', () => {
+  document.getElementById('overlay').classList.add('hidden');
+});
 </script>
-    <script>
-        const debug = (msg) => {
-    const debugDiv = document.getElementById("debug");
-    debugDiv.innerHTML += msg + "<br>";
-    console.log(msg);
-};
 
-const init = async () => {
-    try {
-        debug("1. Начало инициализации");
-        
-        // Проверка MindAR
-        if (typeof MindARFace === "undefined") {
-            debug("❌ MindAR не загружен");
-            return;
-        }
-        debug("2. MindAR загружен ✓");
-
-        const mindarFace = new MindARFace({
-            container: document.getElementById("container"),
-            filterMinCF: 0.001,
-            filterBeta: 10,
-            maxTrack: 1
-        });
-        debug("3. MindARFace создан ✓");
-
-        // Three.js
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        document.getElementById("container").appendChild(renderer.domElement);
-        debug("4. Three.js рендерер создан ✓");
-
-        // Освещение
-        scene.add(new THREE.AmbientLight(0xffffff, 1.0));
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(0, 1, 1);
-        scene.add(dirLight);
-
-        // Очки
-        const glassesGroup = new THREE.Group();
-        const lensGeo = new THREE.TorusGeometry(0.15, 0.02, 16, 32);
-        const lensMat = new THREE.MeshStandardMaterial({ color: 0x000000, metalness: 0.8, roughness: 0.2 });
-        
-        const leftLens = new THREE.Mesh(lensGeo, lensMat);
-        leftLens.position.set(-0.2, 0, 0);
-        leftLens.rotation.y = Math.PI / 2;
-        glassesGroup.add(leftLens);
-
-        const rightLens = new THREE.Mesh(lensGeo, lensMat);
-        rightLens.position.set(0.2, 0, 0);
-        rightLens.rotation.y = Math.PI / 2;
-        glassesGroup.add(rightLens);
-
-        glassesGroup.scale.set(1.5, 1.5, 1.5);
-
-        const anchor = mindarFace.addAnchor(0);
-        anchor.group.add(glassesGroup);
-        glassesGroup.position.set(0, 0.05, 0.1);
-        debug("5. 3D-объекты созданы ✓");
-
-        // ВАЖНО: prepare()
-        debug("6. Загрузка моделей (может занять 5-10 сек)...");
-        await mindarFace.prepare();
-        debug("7. Модели загружены ✓");
-
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("instructions").style.display = "block";
-
-        // Запуск
-        debug("8. Запуск AR...");
-        const { start, stop } = await mindarFace.start();
-        await start();
-        debug("9. AR запущен ✓");
-
-        // Проверка video элемента
-        setTimeout(() => {
-            const video = document.querySelector("video");
-            if (video) {
-                debug("10. Video элемент найден ✓");
-                debug(`Video размер: ${video.videoWidth}x${video.videoHeight}`);
-                debug(`Video стиль: ${video.style.cssText}`);
-            } else {
-                debug("❌ Video элемент НЕ найден!");
-            }
-        }, 1000);
-
-        renderer.setAnimationLoop(() => {
-            renderer.render(scene, camera);
-        });
-
-    } catch (error) {
-        debug("❌ ОШИБКА: " + error.message);
-        console.error(error);
-    }
-};
-
-init();
-    </script>
 </body>
 </html>
