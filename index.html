@@ -15,9 +15,31 @@
     </div>
 
     <!-- MindAR библиотеки -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-face-image.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
-
+<script src="https://unpkg.com/mind-ar@1.2.5/dist/mindar-face.prod.js"></script>
+<script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
+    <script>
+    // Диагностика загрузки скриптов
+    window.addEventListener('error', function(e) {
+        if (e.target.tagName === 'SCRIPT') {
+            alert('❌ Не загрузился скрипт: ' + e.target.src);
+            console.error('Script load error:', e.target.src);
+        }
+    }, true);
+    
+    window.addEventListener('load', function() {
+        console.log('MindARFace:', typeof MindARFace);
+        console.log('THREE:', typeof THREE);
+        
+        if (typeof MindARFace === 'undefined') {
+            document.body.innerHTML = '<div style="color:red; padding:20px; font-size:18px;">' +
+                '❌ MindAR не загружен!<br>' +
+                'Проверьте:<br>' +
+                '1. Интернет-соединение<br>' +
+                '2. Блокировщик рекламы<br>' +
+                '3. Откройте консоль (F12) для деталей</div>';
+        }
+    });
+</script>
     <script>
         const debug = (msg) => {
     const debugDiv = document.getElementById("debug");
