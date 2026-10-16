@@ -8,6 +8,8 @@
 </head>
 <body>
     <div id="container">
+        <div id="debug" style="position:fixed; top:0; left:0; background:rgba(255,255,0,0.9); 
+     z-index:9999; padding:10px; font-size:12px; max-width:300px;"></div>
         <div id="loading">Загрузка AR-маски...</div>
         <div id="instructions">Наведите камеру на лицо</div>
     </div>
@@ -17,122 +19,105 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
 
     <script>
-        const init = async () => {
-            // Инициализация MindAR Face Tracking
-            const mindarFace = new MindARFace({
-                container: document.getElementById("container"),
-                imageTargetSrc: null,
-                filterMinCF: 0.001,
-                filterBeta: 10,
-                maxTrack: 1
-            });
+        const debug = (msg) => {
+    const debugDiv = document.getElementById("debug");
+    debugDiv.innerHTML += msg + "<br>";
+    console.log(msg);
+};
 
-            // Three.js сцена
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(
-                75,
-                window.innerWidth / window.innerHeight,
-                0.1,
-                1000
-            );
-            const renderer = new THREE.WebGLRenderer({
-                antialias: true,
-                alpha: true
-            });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.getElementById("container").appendChild(renderer.domElement);
+const init = async () => {
+    try {
+        debug("1. Начало инициализации");
+        
+        // Проверка MindAR
+        if (typeof MindARFace === "undefined") {
+            debug("❌ MindAR не загружен");
+            return;
+        }
+        debug("2. MindAR загружен ✓");
 
-            // Освещение
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-            scene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-            directionalLight.position.set(0, 1, 1);
-            scene.add(directionalLight);
+        const mindarFace = new MindARFace({
+            container: document.getElementById("container"),
+            filterMinCF: 0.001,
+            filterBeta: 10,
+            maxTrack: 1
+        });
+        debug("3. MindARFace создан ✓");
 
-            // Создание 3D-очков программно
-            const glassesGroup = new THREE.Group();
+        // Three.js
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById("container").appendChild(renderer.domElement);
+        debug("4. Three.js рендерер создан ✓");
 
-            // Левая линза
-            const lensGeometry = new THREE.TorusGeometry(0.15, 0.02, 16, 32);
-            const lensMaterial = new THREE.MeshStandardMaterial({
-                color: 0x000000,
-                metalness: 0.8,
-                roughness: 0.2
-            });
-            const leftLens = new THREE.Mesh(lensGeometry, lensMaterial);
-            leftLens.position.set(-0.2, 0, 0);
-            leftLens.rotation.y = Math.PI / 2;
-            glassesGroup.add(leftLens);
+        // Освещение
+        scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(0, 1, 1);
+        scene.add(dirLight);
 
-            // Правая линза
-            const rightLens = new THREE.Mesh(lensGeometry, lensMaterial);
-            rightLens.position.set(0.2, 0, 0);
-            rightLens.rotation.y = Math.PI / 2;
-            glassesGroup.add(rightLens);
+        // Очки
+        const glassesGroup = new THREE.Group();
+        const lensGeo = new THREE.TorusGeometry(0.15, 0.02, 16, 32);
+        const lensMat = new THREE.MeshStandardMaterial({ color: 0x000000, metalness: 0.8, roughness: 0.2 });
+        
+        const leftLens = new THREE.Mesh(lensGeo, lensMat);
+        leftLens.position.set(-0.2, 0, 0);
+        leftLens.rotation.y = Math.PI / 2;
+        glassesGroup.add(leftLens);
 
-            // Мост между линзами
-            const bridgeGeometry = new THREE.CylinderGeometry(0.01, 0.01, 0.1, 8);
-            const bridgeMaterial = new THREE.MeshStandardMaterial({
-                color: 0x333333,
-                metalness: 0.9,
-                roughness: 0.1
-            });
-            const bridge = new THREE.Mesh(bridgeGeometry, bridgeMaterial);
-            bridge.rotation.z = Math.PI / 2;
-            bridge.position.set(0, 0, 0);
-            glassesGroup.add(bridge);
+        const rightLens = new THREE.Mesh(lensGeo, lensMat);
+        rightLens.position.set(0.2, 0, 0);
+        rightLens.rotation.y = Math.PI / 2;
+        glassesGroup.add(rightLens);
 
-            // Дужки
-            const armGeometry = new THREE.CylinderGeometry(0.01, 0.01, 0.3, 8);
-            const armMaterial = new THREE.MeshStandardMaterial({
-                color: 0x333333,
-                metalness: 0.9,
-                roughness: 0.1
-            });
-            
-            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
-            leftArm.rotation.x = Math.PI / 2;
-            leftArm.position.set(-0.35, 0, -0.15);
-            glassesGroup.add(leftArm);
+        glassesGroup.scale.set(1.5, 1.5, 1.5);
 
-            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
-            rightArm.rotation.x = Math.PI / 2;
-            rightArm.position.set(0.35, 0, -0.15);
-            glassesGroup.add(rightArm);
+        const anchor = mindarFace.addAnchor(0);
+        anchor.group.add(glassesGroup);
+        glassesGroup.position.set(0, 0.05, 0.1);
+        debug("5. 3D-объекты созданы ✓");
 
-            // Масштабирование очков
-            glassesGroup.scale.set(1.5, 1.5, 1.5);
+        // ВАЖНО: prepare()
+        debug("6. Загрузка моделей (может занять 5-10 сек)...");
+        await mindarFace.prepare();
+        debug("7. Модели загружены ✓");
 
-            // Привязка к лицу
-            const anchorIndex = 0;
-            const anchor = mindarFace.addAnchor(anchorIndex);
-            anchor.group.add(glassesGroup);
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("instructions").style.display = "block";
 
-            // Позиционирование очков на лице
-            glassesGroup.position.set(0, 0.05, 0.1);
-            glassesGroup.rotation.set(0, 0, 0);
+        // Запуск
+        debug("8. Запуск AR...");
+        const { start, stop } = await mindarFace.start();
+        await start();
+        debug("9. AR запущен ✓");
 
-            // Скрытие loading
-            document.getElementById("loading").style.display = "none";
+        // Проверка video элемента
+        setTimeout(() => {
+            const video = document.querySelector("video");
+            if (video) {
+                debug("10. Video элемент найден ✓");
+                debug(`Video размер: ${video.videoWidth}x${video.videoHeight}`);
+                debug(`Video стиль: ${video.style.cssText}`);
+            } else {
+                debug("❌ Video элемент НЕ найден!");
+            }
+        }, 1000);
 
-            // Запуск AR
-            const { start, stop } = await mindarFace.start();
-            await start();
+        renderer.setAnimationLoop(() => {
+            renderer.render(scene, camera);
+        });
 
-            // Анимационный цикл
-            renderer.setAnimationLoop(() => {
-                renderer.render(scene, camera);
-            });
+    } catch (error) {
+        debug("❌ ОШИБКА: " + error.message);
+        console.error(error);
+    }
+};
 
-            // Обработка изменения размера окна
-            window.addEventListener("resize", () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-        };
-
-        init();
+init();
     </script>
 </body>
 </html>
