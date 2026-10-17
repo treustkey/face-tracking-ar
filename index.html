@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>AR Шляпа — MindAR Face Tracking</title>
 
-  <!-- A-Frame (3D-движок) -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-
-  <!-- MindAR Face Tracking -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-aframe.prod.js"></script>
 
   <style>
@@ -24,101 +21,77 @@
 <body>
   <div id="overlay">Наведите камеру на лицо 👤</div>
 
-  <!-- A-Frame сцена с mindar-face -->
   <a-scene
     mindar-face
-    color-space="sRGB"
-    renderer="antialias: true; colorManagement: true; physicallyCorrectLights"
+    renderer="antialias: true; colorManagement: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: true">
 
-    <!-- Камера -->
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!--
-      mindar-face-system создаёт сущности-якоря для каждой ключевой точки лица.
-      Мы используем встроенный якорь "10" — это верхняя часть головы
-      (по стандарту MediaPipe Face Mesh: landmark #10 = mid-top of head).
-    -->
+    <!-- Шляпа на макушке (landmark 10) -->
     <a-entity mindar-face-target="index: 10">
-
-      <!-- === 3D ШЛЯПА === -->
       <a-entity
         position="0 0.05 0"
         rotation="0 0 0"
         scale="0.0015 0.0015 0.0015">
 
-        <!-- Тулья (цилиндр) -->
         <a-cylinder
           position="0 0 0"
-          radius="30"
-          height="35"
+          radius="30" height="35"
           color="#2c1810"
           material="roughness: 0.8; metalness: 0.1">
         </a-cylinder>
 
-        <!-- Верх шляпы (полусфера) -->
         <a-sphere
           position="0 17 0"
           radius="30"
-          segments-height="16"
-          segments-width="32"
+          segments-height="16" segments-width="32"
           theta-length="90"
           color="#2c1810"
           material="roughness: 0.8; metalness: 0.1">
         </a-sphere>
 
-        <!-- Поля шляпы (широкий диск) -->
         <a-cylinder
           position="0 -15 0"
-          radius="55"
-          height="3"
+          radius="55" height="3"
           color="#1a0f08"
           material="roughness: 0.9; metalness: 0.05">
         </a-cylinder>
 
-        <!-- Декоративная лента -->
         <a-cylinder
           position="0 -5 0"
-          radius="30.5"
-          height="6"
+          radius="30.5" height="6"
           color="#c0392b"
           material="roughness: 0.4; metalness: 0.3">
         </a-cylinder>
       </a-entity>
-
     </a-entity>
 
-    <!-- === ДОПОЛНИТЕЛЬНЫЕ ОЧКИ (привязаны к переносице — landmark #6) === -->
+    <!-- Очки на переносице (landmark 6) -->
     <a-entity mindar-face-target="index: 6">
       <a-entity
         position="0 0 0.02"
         rotation="0 0 0"
         scale="0.001 0.001 0.001">
 
-        <!-- Левая линза -->
         <a-torus
           position="-25 0 0"
-          radius="15"
-          radius-tubular="1.5"
+          radius="15" radius-tubular="1.5"
           color="#111"
           material="metalness: 0.8; roughness: 0.2">
         </a-torus>
 
-        <!-- Правая линза -->
         <a-torus
           position="25 0 0"
-          radius="15"
-          radius-tubular="1.5"
+          radius="15" radius-tubular="1.5"
           color="#111"
           material="metalness: 0.8; roughness: 0.2">
         </a-torus>
 
-        <!-- Перемычка -->
         <a-cylinder
           position="0 0 0"
-          radius="1.5"
-          height="20"
+          radius="1.5" height="20"
           rotation="0 0 90"
           color="#111">
         </a-cylinder>
@@ -128,9 +101,7 @@
   </a-scene>
 
   <script>
-    // === Сглаживание позиции для стабильности трекинга ===
-    // MindAR уже применяет базовый фильтр Калмана, но мы можем
-    // дополнительно сгладить резкие скачки при быстрых поворотах головы.
+    // Сглаживание трекинга
     AFRAME.registerComponent('smooth-tracking', {
       schema: { factor: { type: 'number', default: 0.3 } },
       init: function () {
@@ -146,19 +117,16 @@
           this.ready = true;
           return;
         }
-        // Экспоненциальное сглаживание: newPos = prev + f * (curr - prev)
         this.prev.lerp(this.curr, this.data.factor);
         el.object3D.position.copy(this.prev);
       }
     });
 
-    // Применим сглаживание к шляпе
     document.querySelector('[mindar-face-target="index: 10"]')
             .setAttribute('smooth-tracking', 'factor: 0.35');
     document.querySelector('[mindar-face-target="index: 6"]')
             .setAttribute('smooth-tracking', 'factor: 0.4');
 
-    // === Обработка событий трекинга ===
     const scene = document.querySelector('a-scene');
     const overlay = document.getElementById('overlay');
 
