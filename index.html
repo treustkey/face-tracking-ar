@@ -32,22 +32,22 @@
     <!-- Шляпа на макушке (landmark 10) -->
     <a-entity mindar-face-target="index: 10">
       <a-entity
-        position="0 0.05 0"
+        position="0 0.15 0"
         rotation="0 0 0"
-        scale="0.0015 0.0015 0.0015">
+        scale="0.0025 0.0025 0.0025">
 
         <!-- Тулья -->
         <a-cylinder
           position="0 0 0"
-          radius="30" height="35"
+          radius="40" height="45"
           color="#2c1810"
           material="roughness: 0.8; metalness: 0.1">
         </a-cylinder>
 
         <!-- Верх шляпы -->
         <a-sphere
-          position="0 17 0"
-          radius="30"
+          position="0 22 0"
+          radius="40"
           segments-height="16" segments-width="32"
           theta-length="90"
           color="#2c1810"
@@ -56,16 +56,16 @@
 
         <!-- Поля -->
         <a-cylinder
-          position="0 -15 0"
-          radius="55" height="3"
+          position="0 -20 0"
+          radius="75" height="4"
           color="#1a0f08"
           material="roughness: 0.9; metalness: 0.05">
         </a-cylinder>
 
         <!-- Лента -->
         <a-cylinder
-          position="0 -5 0"
-          radius="30.5" height="6"
+          position="0 -8 0"
+          radius="40.5" height="8"
           color="#c0392b"
           material="roughness: 0.4; metalness: 0.3">
         </a-cylinder>
@@ -96,11 +96,9 @@
       }
     });
 
-    // Применяем сглаживание только к шляпе
     document.querySelector('[mindar-face-target="index: 10"]')
             .setAttribute('smooth-tracking', 'factor: 0.35');
 
-    // Обработка событий трекинга
     const scene = document.querySelector('a-scene');
     const overlay = document.getElementById('overlay');
 
