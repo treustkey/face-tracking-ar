@@ -2,193 +2,174 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <title>MindAR Face — Шляпа</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>AR Шляпа — MindAR Face Tracking</title>
 
+  <!-- A-Frame (3D-движок) -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-face.prod.js"></script>
+
+  <!-- MindAR Face Tracking -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-aframe.prod.js"></script>
 
   <style>
-    body { margin: 0; overflow: hidden; background: #000; color: #fff; font-family: sans-serif; }
+    body { margin: 0; overflow: hidden; font-family: sans-serif; }
     #overlay {
-      position: fixed; inset: 0; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; text-align: center;
-      background: rgba(0,0,0,0.9); z-index: 100; padding: 20px;
+      position: fixed; top: 10px; left: 10px; z-index: 10;
+      background: rgba(0,0,0,0.6); color: #fff; padding: 8px 12px;
+      border-radius: 8px; font-size: 13px;
     }
-    #overlay.hidden { display: none; }
-    #startBtn {
-      margin-top: 20px; padding: 16px 32px; font-size: 18px;
-      background: #FFD700; color: #000; border: none; border-radius: 10px;
-      cursor: pointer; font-weight: bold;
-    }
-    #startBtn:disabled { background: #666; color: #aaa; }
-    #status { margin-top: 16px; font-size: 14px; color: #ff9; min-height: 40px; max-width: 90%; }
-    #diag { margin-top: 10px; font-size: 11px; color: #888; max-width: 90%; word-break: break-all; }
   </style>
 </head>
+
 <body>
+  <div id="overlay">Наведите камеру на лицо 👤</div>
 
-<div id="overlay">
-  <h2>🎩 Шляпа AR</h2>
-  <p>Нажмите кнопку — браузер запросит камеру</p>
-  <button id="startBtn">▶ Запустить AR</button>
-  <div id="status"></div>
-  <div id="diag"></div>
-</div>
+  <!-- A-Frame сцена с mindar-face -->
+  <a-scene
+    mindar-face
+    color-space="sRGB"
+    renderer="antialias: true; colorManagement: true; physicallyCorrectLights"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: true">
 
-<!-- ВАЖНО: autoStart="false" — не запускаем камеру сами -->
-<a-scene
-  id="scene"
-  mindar-face="autoStart: false; showStats: false"
-  color-space="srgb"
-  renderer="antialias: true; colorManagement: true"
-  device-orientation-permission-ui="enabled: false"
-  vr-mode-ui="enabled: false">
+    <!-- Камера -->
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-  <a-camera active="false" position="0 0 0" look-controls="enabled: false"></a-camera>
+    <!--
+      mindar-face-system создаёт сущности-якоря для каждой ключевой точки лица.
+      Мы используем встроенный якорь "10" — это верхняя часть головы
+      (по стандарту MediaPipe Face Mesh: landmark #10 = mid-top of head).
+    -->
+    <a-entity mindar-face-target="index: 10">
 
-  <!-- ШЛЯПА -->
-  <a-entity mindar-face-target="anchorIndex: 8">
-    <a-entity id="hat" position="0 0.02 0" rotation="-8 0 0"
-              scale="0.11 0.11 0.11" hat-sway>
-      <a-cylinder position="0 0 0" radius="1.1" height="0.06"
-                  color="#1a1a1a" segments-radial="48"></a-cylinder>
-      <a-cylinder position="0 0.55 0" radius="0.55" height="0.9"
-                  color="#111" segments-radial="36"></a-cylinder>
-      <a-cylinder position="0 1.0 0" radius="0.55" height="0.04"
-                  color="#0a0a0a" segments-radial="36"></a-cylinder>
-      <a-cylinder position="0 0.2 0" radius="0.57" height="0.18"
-                  color="#8B0000" segments-radial="36"></a-cylinder>
-      <a-box position="0 0.2 0.57" width="0.18" height="0.18" depth="0.04"
-             color="#FFD700"></a-box>
+      <!-- === 3D ШЛЯПА === -->
+      <a-entity
+        position="0 0.05 0"
+        rotation="0 0 0"
+        scale="0.0015 0.0015 0.0015">
+
+        <!-- Тулья (цилиндр) -->
+        <a-cylinder
+          position="0 0 0"
+          radius="30"
+          height="35"
+          color="#2c1810"
+          material="roughness: 0.8; metalness: 0.1">
+        </a-cylinder>
+
+        <!-- Верх шляпы (полусфера) -->
+        <a-sphere
+          position="0 17 0"
+          radius="30"
+          segments-height="16"
+          segments-width="32"
+          theta-length="90"
+          color="#2c1810"
+          material="roughness: 0.8; metalness: 0.1">
+        </a-sphere>
+
+        <!-- Поля шляпы (широкий диск) -->
+        <a-cylinder
+          position="0 -15 0"
+          radius="55"
+          height="3"
+          color="#1a0f08"
+          material="roughness: 0.9; metalness: 0.05">
+        </a-cylinder>
+
+        <!-- Декоративная лента -->
+        <a-cylinder
+          position="0 -5 0"
+          radius="30.5"
+          height="6"
+          color="#c0392b"
+          material="roughness: 0.4; metalness: 0.3">
+        </a-cylinder>
+      </a-entity>
+
     </a-entity>
-  </a-entity>
 
-  <!-- РАМКА -->
-  <a-entity mindar-face-target="anchorIndex: 0">
-    <a-entity id="frame" position="0 0 0" scale="0.18 0.22 0.18" frame-animation>
-      <a-box position="0  0.5 0" width="1.05" height="0.05" depth="0.05" color="#FFD700"></a-box>
-      <a-box position="0 -0.5 0" width="1.05" height="0.05" depth="0.05" color="#FFD700"></a-box>
-      <a-box position="-0.5 0 0" width="0.05" height="1.05" depth="0.05" color="#FFD700"></a-box>
-      <a-box position=" 0.5 0 0" width="0.05" height="1.05" depth="0.05" color="#FFD700"></a-box>
-      <a-sphere position="-0.5  0.5 0" radius="0.07" color="#ff3366"></a-sphere>
-      <a-sphere position=" 0.5  0.5 0" radius="0.07" color="#33ccff"></a-sphere>
-      <a-sphere position="-0.5 -0.5 0" radius="0.07" color="#33ccff"></a-sphere>
-      <a-sphere position=" 0.5 -0.5 0" radius="0.07" color="#ff3366"></a-sphere>
+    <!-- === ДОПОЛНИТЕЛЬНЫЕ ОЧКИ (привязаны к переносице — landmark #6) === -->
+    <a-entity mindar-face-target="index: 6">
+      <a-entity
+        position="0 0 0.02"
+        rotation="0 0 0"
+        scale="0.001 0.001 0.001">
+
+        <!-- Левая линза -->
+        <a-torus
+          position="-25 0 0"
+          radius="15"
+          radius-tubular="1.5"
+          color="#111"
+          material="metalness: 0.8; roughness: 0.2">
+        </a-torus>
+
+        <!-- Правая линза -->
+        <a-torus
+          position="25 0 0"
+          radius="15"
+          radius-tubular="1.5"
+          color="#111"
+          material="metalness: 0.8; roughness: 0.2">
+        </a-torus>
+
+        <!-- Перемычка -->
+        <a-cylinder
+          position="0 0 0"
+          radius="1.5"
+          height="20"
+          rotation="0 0 90"
+          color="#111">
+        </a-cylinder>
+      </a-entity>
     </a-entity>
-  </a-entity>
-</a-scene>
 
-<script>
-/* ---------- Диагностика ---------- */
-const diag = document.getElementById('diag');
-diag.innerHTML = `
-  URL: <b>${location.href}</b><br>
-  Протокол: <b>${location.protocol}</b><br>
-  Secure context: <b>${window.isSecureContext}</b>
-`;
+  </a-scene>
 
-/* ---------- Кнопка старта ---------- */
-const btn = document.getElementById('startBtn');
-const status = document.getElementById('status');
-const overlay = document.getElementById('overlay');
-const scene = document.getElementById('scene');
-
-btn.addEventListener('click', async () => {
-  btn.disabled = true;
-  status.textContent = '⏳ Запрашиваем камеру...';
-
-  // 1. Проверка secure context
-  if (!window.isSecureContext) {
-    status.innerHTML = '❌ Нужен HTTPS. Сейчас: ' + location.protocol;
-    btn.disabled = false;
-    return;
-  }
-
-  // 2. Проверка API
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    status.textContent = '❌ Браузер не поддерживает камеру';
-    btn.disabled = false;
-    return;
-  }
-
-  // 3. ЯВНЫЙ запрос камеры по user gesture
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 1280 } },
-      audio: false
+  <script>
+    // === Сглаживание позиции для стабильности трекинга ===
+    // MindAR уже применяет базовый фильтр Калмана, но мы можем
+    // дополнительно сгладить резкие скачки при быстрых поворотах головы.
+    AFRAME.registerComponent('smooth-tracking', {
+      schema: { factor: { type: 'number', default: 0.3 } },
+      init: function () {
+        this.prev = new THREE.Vector3();
+        this.curr = new THREE.Vector3();
+        this.ready = false;
+      },
+      tick: function () {
+        const el = this.el;
+        this.curr.copy(el.object3D.position);
+        if (!this.ready) {
+          this.prev.copy(this.curr);
+          this.ready = true;
+          return;
+        }
+        // Экспоненциальное сглаживание: newPos = prev + f * (curr - prev)
+        this.prev.lerp(this.curr, this.data.factor);
+        el.object3D.position.copy(this.prev);
+      }
     });
-    status.textContent = '✅ Камера разрешена. Запускаем AR...';
-    // Останавливаем тестовый поток — MindAR откроет свой
-    stream.getTracks().forEach(t => t.stop());
-  } catch (err) {
-    let msg = err.name + ': ' + err.message;
-    if (err.name === 'NotAllowedError') {
-      msg = 'Вы запретили камеру. Зайдите в настройки браузера → разрешения → камера → разрешить для этого сайта.';
-    } else if (err.name === 'NotFoundError') {
-      msg = 'Камера не найдена на устройстве.';
-    } else if (err.name === 'NotReadableError') {
-      msg = 'Камера занята другим приложением. Закройте Zoom/Skype/Telegram.';
-    }
-    status.innerHTML = '❌ ' + msg;
-    btn.disabled = false;
-    return;
-  }
 
-  // 4. Ждём, пока A-Frame сцена полностью загрузится
-  if (!scene.hasLoaded) {
-    await new Promise(r => scene.addEventListener('loaded', r, { once: true }));
-  }
+    // Применим сглаживание к шляпе
+    document.querySelector('[mindar-face-target="index: 10"]')
+            .setAttribute('smooth-tracking', 'factor: 0.35');
+    document.querySelector('[mindar-face-target="index: 6"]')
+            .setAttribute('smooth-tracking', 'factor: 0.4');
 
-  // 5. Стартуем MindAR вручную
-  try {
-    const arSystem = scene.systems['mindar-face'];
-    if (!arSystem) throw new Error('MindAR Face system не найден');
-    await arSystem.start();
-    status.textContent = '🎉 AR запущен! Наведите камеру на лицо.';
-    setTimeout(() => overlay.classList.add('hidden'), 1000);
-  } catch (err) {
-    status.innerHTML = '❌ Ошибка AR: ' + err.message;
-    btn.disabled = false;
-  }
-});
+    // === Обработка событий трекинга ===
+    const scene = document.querySelector('a-scene');
+    const overlay = document.getElementById('overlay');
 
-/* ---------- Сглаживание ---------- */
-AFRAME.registerComponent('smooth-look', {
-  schema: { factor: { type: 'number', default: 0.4 } },
-  init() {
-    this._tP = new THREE.Vector3(); this._cP = new THREE.Vector3();
-    this._tQ = new THREE.Quaternion(); this._cQ = new THREE.Quaternion();
-  },
-  tick() {
-    const o = this.el.object3D, k = this.data.factor;
-    this._tP.copy(o.position); this._cP.lerp(this._tP, k); o.position.copy(this._cP);
-    o.getWorldQuaternion(this._tQ); this._cQ.slerp(this._tQ, k); o.quaternion.copy(this._cQ);
-  }
-});
-
-AFRAME.registerComponent('hat-sway', {
-  tick(t) {
-    const r = this.el.object3D.rotation;
-    r.z = Math.sin(t * 0.0012) * 0.04;
-    r.x = -0.14 + Math.sin(t * 0.0018) * 0.02;
-  }
-});
-
-AFRAME.registerComponent('frame-animation', {
-  tick(t) {
-    const s = 1 + Math.sin(t * 0.003) * 0.03;
-    this.el.object3D.scale.set(0.18 * s, 0.22 * s, 0.18 * s);
-    this.el.object3D.rotation.z = Math.sin(t * 0.0015) * 0.05;
-  }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('[mindar-face-target]').forEach(el => {
-    el.setAttribute('smooth-look', 'factor: 0.4');
-  });
-});
-</script>
-
+    scene.addEventListener('targetFound', () => {
+      overlay.textContent = '✅ Лицо обнаружено!';
+      overlay.style.background = 'rgba(0,128,0,0.7)';
+    });
+    scene.addEventListener('targetLost', () => {
+      overlay.textContent = '⏳ Ищу лицо...';
+      overlay.style.background = 'rgba(0,0,0,0.6)';
+    });
+  </script>
 </body>
 </html>
